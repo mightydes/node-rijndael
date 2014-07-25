@@ -24,8 +24,20 @@ var Rijndael = function(key, options) {
   if (options.iv && !Buffer.isBuffer(options.iv))
     throw new TypeError('iv must be a buffer or a string');
 
-  if (key.length !== 32)
+  var key_tail = false,
+      key_pad_char = '\0';
+  if (key.length < 16) {
+    key_tail = new Array(17 - key.length).join(key_pad_char);
+  } else if (key.length < 24 && key.length > 16) {
+    key_tail = new Array(25 - key.length).join(key_pad_char);
+  } else if (key.length < 32 && key.length > 24) {
+    key_tail = new Array(33 - key.length).join(key_pad_char);
+  } else {
     throw new Error('key length does not match algorithm parameters');
+  }
+  if (key_tail !== false) {
+    key = Buffer.concat([key, new Buffer(key_tail)]);
+  }
 
   if (typeof options.mode !== 'string')
     throw new TypeError('block mode must be a string');
@@ -88,6 +100,6 @@ Rijndael.MCRYPT_MODE_OFB = Rijndael.MODE_OFB = 'ofb';
 Rijndael.MCRYPT_MODE_NOFB = Rijndael.MODE_NOFB = 'nofb';
 Rijndael.MCRYPT_MODE_STREAM = Rijndael.MODE_STREAM = 'stream';
 
-Rijndael.version = "0.1.0";
+Rijndael.version = "0.1.1";
 
 module.exports = Rijndael;
